@@ -4,8 +4,10 @@ import Axios from 'axios';
 import Alert from '@material-ui/lab/Alert';
 import TempData from '../../components/TempData';
 import ForecastData from '../forecast';
-import Skeleton from 'react-loading-skeleton'
-import ForecastChart from '../../views/forecast/ForecastChart'
+import Skeleton from 'react-loading-skeleton';
+import ForecastChart from '../../views/forecast/ForecastChart';
+
+const apiKey = process.env.REACT_APP_WEATHER_API_KEY
 
 const useStyles = makeStyles ({
     card: {
@@ -30,25 +32,6 @@ const WidgetMain = () => {
     const [loading, setLoading] = useState(true);
     // set location gets called if using google geolocation 
     const [location, setLocation] = useState('Cupertino, CA')
-    
-    // const getLocation = async (lat : number, lng : number) => {
-    //     using google api works this way (dont want to enable billing)
-    //     try {
-    //         await Axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
-    //             params: {
-    //                 latlng: `${lat},${lng}`,
-    //                 key: 'AIzaSyCPxBHr4ofrNKZLXkLzmNm22VFWpIjabkU'
-    //             }
-                
-    //         }).then((response: any) => {
-    //             const data = `${response.results[4].long_name}, ${response.results[6].short_name}`
-    //             setLocation(data)
-    //         })
-
-    //     } catch (error) {
-            
-    //     }
-    // }
 
     const getCoordinates = async() => {
        if (!coordinates.lat && !coordinates.lon) {
@@ -59,24 +42,24 @@ const WidgetMain = () => {
     };
 
     useEffect(() => {
-        const getWeatherFromAPI = async () =>{
+        const getWeatherFromAPI = async() => {
             try {
                 await Axios.get('https://api.openweathermap.org/data/2.5/onecall', {
                     params: {
                         lat: coordinates.lat,
                         lon: coordinates.lon,
                         units: 'imperial',
-                        appid: '4fcd2c4a2dcf57832d8b5a6c3d3c35e8'
+                        appid: apiKey
                     }
                 }).then((response: any) => {
                     settempData(response)
                 })
-            } catch (error) {
-                setErrorMessage('failed to access api')
-                console.log(error)
-            } finally {
-                setLoading(false)
-            }
+                } catch (error) {
+                    setErrorMessage('failed to access api')
+                    console.log(error)
+                } finally {
+                    setLoading(false)
+                }
         }
         getCoordinates()
         if (!tempData && coordinates.lat) {
@@ -91,20 +74,21 @@ const WidgetMain = () => {
                 <Typography variant='h1' className={classes.graphLoader}><Skeleton height="11rem" count={1}/></Typography>
                 <Typography variant='h1'><Skeleton height="8rem" count={1}/></Typography>
             </>
-            : <>
-            {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-            <Card className={classes.card}>
-                <CardContent>
-                    <Box paddingBottom='3rem'>
-                        <TempData data={tempData.data} location={location}/>
-                    </Box>
-                    <Box paddingBottom="5rem">
-                        <ForecastChart data={tempData.data.hourly} />
-                    </Box>
-                    <ForecastData className={classes.forecast} data={tempData.data.daily}/>
-                </CardContent>
-            </Card>
-        </>
+            : 
+            <>
+                {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+                <Card className={classes.card}>
+                    <CardContent>
+                        <Box paddingBottom='3rem'>
+                            <TempData data={tempData.data} location={location}/>
+                        </Box>
+                        <Box paddingBottom="5rem">
+                            <ForecastChart data={tempData.data.hourly} />
+                        </Box>
+                        <ForecastData className={classes.forecast} data={tempData.data.daily}/>
+                    </CardContent>
+                </Card>
+            </>
     )
 };
 
